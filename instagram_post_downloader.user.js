@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         instagram post downloader
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.3
 // @description  try to take over the world!
 // @author       You
 // @match        https://www.instagram.com/*
@@ -20,12 +20,23 @@ class InstagramPostDownloader{
 
     }
 
-    init(){
-        if(location.href.indexOf('/p/') == -1){
+    async init(){
+        if(document.URL.indexOf('/p/') == -1){
             alert('not post');
             return false;
         }
-        let postPage = window._sharedData.entry_data.PostPage[0];
+        document.getElementById('mybutton').disabled = true;
+        // DOMサイトなので改めて取得したほうが分かりやすい
+        const s = await this.rq({url: document.URL, dataType: 'text'});
+        if(! s){
+            alert('get postPage error');
+            return false;
+        }
+        s.match(/window._sharedData = ([^<]+)/);
+        const js = RegExp.$1;
+        const _sharedData = JSON.parse(js);
+        console.log(_sharedData);
+        let postPage = _sharedData.entry_data.PostPage[0];
         this.graphql = postPage.graphql;
         this.__typename = this.graphql.shortcode_media.__typename;
         this.shortcode = this.graphql.shortcode_media.shortcode;
@@ -79,6 +90,7 @@ class InstagramPostDownloader{
         function _rq(resolve){
             const xhr = new XMLHttpRequest();
             xhr.onprogress = function(e){
+                if(xhr.responseType != 'blob'){return;}
                 let per = e.loaded / e.total * 100;
                 per = parseInt(per);
                 _this.setProg(per);
@@ -131,11 +143,11 @@ class InstagramPostDownloader{
         _a.click();
     }
 
-    run(){
-        let ret = this.init();
+    async run(){
+        let ret = await this.init();
         if(! ret){return;}
         this.setDlurls();
-        this.dls();
+        await this.dls();
     }
 }
 

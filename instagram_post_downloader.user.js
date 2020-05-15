@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         instagram post downloader
 // @namespace    http://tampermonkey.net/
-// @version      0.3
+// @version      0.4
 // @description  try to take over the world!
 // @author       You
 // @match        https://www.instagram.com/*
@@ -154,6 +154,7 @@ class InstagramPostDownloader{
 
 function makeDiv(){
     const div = document.createElement('div');
+    div.id = '__my_div__';
     div.innerHTML = `
     <style>
     #mybutton{
@@ -198,6 +199,40 @@ window.ipd = ipd;
 makeDiv();
 
 
+function setDisplayMydiv(){
+    // 何かしたいこと
+    // console.log(mutation.target);
+    // console.log(document.URL);
+    const mydiv = document.getElementById('__my_div__');
+    // console.log(mydiv);
+    if(document.URL.indexOf('/p/') == -1 && mydiv){
+        mydiv.style.display = 'none';
+    }else if(document.URL.indexOf('/p/') > -1 && mydiv){
+        mydiv.style.display = '';
+    }
+}
+
+
+const target = document.querySelector('body');
+
+// オブザーバインスタンスを作成
+const observer = new MutationObserver(
+    function(mutations){
+        mutations.forEach(setDisplayMydiv);
+    }
+);
+
+// オブザーバの設定
+const config = {
+    childList: true,
+    subtree: true
+};
+
+// 対象ノードとオブザーバの設定を渡す
+observer.observe(target, config);
+
+setDisplayMydiv(); // 1回実行しとく
 
 })();
+
 

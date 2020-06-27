@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         instagram post downloader
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @description  try to take over the world!
 // @author       You
 // @match        https://www.instagram.com/*
@@ -33,11 +33,20 @@ class InstagramPostDownloader{
             return false;
         }
         s.match(/window._sharedData = ([^<]+)/);
-        const js = RegExp.$1;
+        const js = RegExp.$1.slice(0, -1);
         const _sharedData = JSON.parse(js);
         console.log(_sharedData);
         let postPage = _sharedData.entry_data.PostPage[0];
-        this.graphql = postPage.graphql;
+        if(! postPage.graphql){
+            s.match(/({"graphql":{"shortcode_media":[^<]+)/);
+            const js2 = RegExp.$1.slice(0, -2);
+            console.log(js2);
+            postPage = JSON.parse(js2);
+            console.log(postPage);
+            this.graphql = postPage.graphql;
+        }else{
+            this.graphql = postPage.graphql;
+        }
         this.__typename = this.graphql.shortcode_media.__typename;
         this.shortcode = this.graphql.shortcode_media.shortcode;
         console.log(this.shortcode);
